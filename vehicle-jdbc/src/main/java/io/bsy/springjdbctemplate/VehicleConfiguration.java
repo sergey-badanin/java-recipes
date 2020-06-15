@@ -29,8 +29,19 @@ public class VehicleConfiguration {
     }
 
     @Bean
-    public VehicleDao vehicleDao(@Qualifier("dbProperties") Properties props) {
-        return new JdbcTemplateVehicleDao(dataSource(props));
+    @Qualifier("simpleTemplate")
+    public VehicleDao jdbcTemplateVehicleDao(DataSource dataSource) {
+        JdbcTemplateVehicleDao vehicleDao = new JdbcTemplateVehicleDao();
+        vehicleDao.setDataSource(dataSource);
+        return vehicleDao;
+    }
+
+    @Bean
+    @Qualifier("namedParamsTemplate")
+    public VehicleDao jdbcTemplateNamedParamsVehicleDao(DataSource dataSource) {
+        JdbcTemplateNamedParamsVehicleDao vehicleDao = new JdbcTemplateNamedParamsVehicleDao();
+        vehicleDao.setDataSource(dataSource);
+        return vehicleDao;
     }
 
     @Bean

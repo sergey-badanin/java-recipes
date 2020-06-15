@@ -17,17 +17,29 @@ public interface VehicleDao {
     String SELECT_COLOR_SQL = "SELECT COLOR FROM VEHICLE WHERE VEHICLE_NO=?";
     String DELETE_ALL = "DELETE FROM vehicle";
 
-    void insert(Vehicle vehicle);
+    default void insert(Vehicle vehicle) {
+        //do  nothing
+    }
 
-    void insert(Collection<Vehicle> vehicles);
+    default void insert(Collection<Vehicle> vehicles) {
+        //do nothing
+    }
 
-    void update(Vehicle vehicle);
+    default void update(Vehicle vehicle) {
+        //do nothing
+    }
 
-    void delete(Vehicle vehicle);
+    default void delete(Vehicle vehicle) {
+        //do nothing
+    }
 
-    void deleteAll();
+    default void deleteAll() {
+        //do nothing
+    }
 
-    Vehicle findByVehicleNo(String vehicleNo);
+    default Optional<Vehicle> findByVehicleNo(String vehicleNo) {
+        return Optional.empty();
+    }
 
     default Optional<Vehicle> findOneByColor(String color) {
         return Optional.empty();
@@ -46,5 +58,7 @@ public interface VehicleDao {
         return Optional.empty();
     }
 
-    List<Vehicle> findAll();
+    default List<Vehicle> findAll() {
+        return Collections.emptyList();
+    }
 }

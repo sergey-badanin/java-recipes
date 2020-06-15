@@ -4,9 +4,8 @@ import io.bsy.pure.Vehicle;
 import io.bsy.pure.VehicleDao;
 import io.bsy.utils.Holder;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
-import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -17,12 +16,9 @@ import java.util.Optional;
  * Spring documentation on JdbcTemplates
  * https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/jdbc/core/package-summary.html#package.description
  */
-public class JdbcTemplateVehicleDao implements VehicleDao {
+public class JdbcTemplateVehicleDao extends JdbcDaoSupport implements VehicleDao {
 
-    private final DataSource dataSource;
-
-    public JdbcTemplateVehicleDao(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public JdbcTemplateVehicleDao() {
     }
 
     /*
@@ -30,8 +26,7 @@ public class JdbcTemplateVehicleDao implements VehicleDao {
      */
     @Override
     public void insert(Vehicle vehicle) {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-        template.update((conn) -> {
+        getJdbcTemplate().update((conn) -> {
             PreparedStatement ps = conn.prepareStatement(INSERT_SQL);
             prepareStatement(ps, vehicle);
             return ps;
@@ -43,8 +38,7 @@ public class JdbcTemplateVehicleDao implements VehicleDao {
      */
     @Override
     public void insert(Collection<Vehicle> vehicles) {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-        template.batchUpdate(INSERT_SQL, vehicles, vehicles.size(), JdbcTemplateVehicleDao::prepareStatement);
+        getJdbcTemplate().batchUpdate(INSERT_SQL, vehicles, vehicles.size(), JdbcTemplateVehicleDao::prepareStatement);
     }
 
     /*
@@ -52,28 +46,21 @@ public class JdbcTemplateVehicleDao implements VehicleDao {
      */
     @Override
     public void update(Vehicle vehicle) {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-        template.update(UPDATE_SQL, vehicle.getColor(), vehicle.getWheel(), vehicle.getSeat(), vehicle.getVehicleNo());
-    }
-
-    @Override
-    public void delete(Vehicle vehicle) {
-
+        getJdbcTemplate().update(UPDATE_SQL, vehicle.getColor(), vehicle.getWheel(), vehicle.getSeat(), vehicle.getVehicleNo());
     }
 
     @Override
     public void deleteAll() {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-        template.execute(DELETE_ALL);
+        getJdbcTemplate().execute(DELETE_ALL);
     }
 
     /*
      * Illustration of BeanPropertyRowMapper<T> - spring default RowMapper<T> implementation
      */
     @Override
-    public Vehicle findByVehicleNo(String vehicleNo) {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-        return template.queryForObject(SELECT_ONE_SQL, BeanPropertyRowMapper.newInstance(Vehicle.class), vehicleNo);
+    public Optional<Vehicle> findByVehicleNo(String vehicleNo) {
+        return Optional.ofNullable(getJdbcTemplate()
+                .queryForObject(SELECT_ONE_SQL, BeanPropertyRowMapper.newInstance(Vehicle.class), vehicleNo));
     }
 
 
@@ -82,10 +69,8 @@ public class JdbcTemplateVehicleDao implements VehicleDao {
      */
     @Override
     public Optional<Vehicle> findOneByColor(String color) {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-
         final Holder<Optional<Vehicle>> holder = new Holder<>(Optional.empty());
-        template.query(SELECT_ONE_SQL,
+        getJdbcTemplate().query(SELECT_ONE_SQL,
                 rs -> {
                     Vehicle vehicle = new Vehicle();
                     vehicle.setVehicleNo(rs.getString("vehicle_no"));
@@ -103,24 +88,21 @@ public class JdbcTemplateVehicleDao implements VehicleDao {
      */
     @Override
     public List<Vehicle> findAll() {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-        return template.query(SELECT_ALL_SQL, BeanPropertyRowMapper.newInstance(Vehicle.class));
+        return getJdbcTemplate().query(SELECT_ALL_SQL, BeanPropertyRowMapper.newInstance(Vehicle.class));
     }
 
     /*
      * Illustration of mapping to single value
      */
     public Optional<String> getColor(String vehicleNo) {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-        return Optional.ofNullable(template.queryForObject(SELECT_COLOR_SQL, String.class, vehicleNo));
+        return Optional.ofNullable(getJdbcTemplate().queryForObject(SELECT_COLOR_SQL, String.class, vehicleNo));
     }
 
     /*
      * Illustration of mapping to single value
      */
     public Optional<Integer> countAll() {
-        JdbcTemplate template = new JdbcTemplate(dataSource);
-        return Optional.ofNullable(template.queryForObject(COUNT_ALL_SQL, Integer.class));
+        return Optional.ofNullable(getJdbcTemplate().queryForObject(COUNT_ALL_SQL, Integer.class));
     }
 
     private static void prepareStatement(PreparedStatement ps, Vehicle vehicle) throws SQLException {

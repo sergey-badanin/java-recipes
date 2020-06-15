@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class JdbcVehicleDao implements VehicleDao {
 
@@ -28,27 +29,7 @@ public class JdbcVehicleDao implements VehicleDao {
     }
 
     @Override
-    public void insert(Collection<Vehicle> vehicles) {
-        vehicles.forEach(this::insert);
-    }
-
-    @Override
-    public void update(Vehicle vehicle) {
-
-    }
-
-    @Override
-    public void delete(Vehicle vehicle) {
-
-    }
-
-    @Override
-    public void deleteAll() {
-
-    }
-
-    @Override
-    public Vehicle findByVehicleNo(String vehicleNo) {
+    public Optional<Vehicle> findByVehicleNo(String vehicleNo) {
         try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(SELECT_ONE_SQL)) {
             ps.setString(1, vehicleNo);
 
@@ -58,7 +39,7 @@ public class JdbcVehicleDao implements VehicleDao {
                     vehicle = toVehicle(rs);
                 }
             }
-            return vehicle;
+            return Optional.ofNullable(vehicle);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
